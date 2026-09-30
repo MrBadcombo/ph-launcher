@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8" />
+<title>PH Launcher</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- پس‌زمینه -->
+    <div class="bg-image" id="bg-image"></div>
+    <div class="bg-tint"></div>
+
+    <!-- صفحه‌ی اصلی -->
+    <div class="home-stage">
+      <div class="account-chip" id="home-account-chip">
+        <div class="avatar-circle" id="home-account-avatar">?</div>
+        <span id="home-account-name">-</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:9px;color:var(--text-muted)"></i>
+        <div class="account-quick-menu" id="account-quick-menu"></div>
+      </div>
+
+      <div class="home-center">
+
+        <h1 class="home-greeting"><span data-i18n="home.welcome">خوش اومدی،</span> <span id="home-username">Player</span></h1>
+
+        <div class="version-row">
+          <select id="home-version-select" class="version-select">
+            <option value="" data-i18n="home.selectVersionPlaceholder">یک نسخه انتخاب کن</option>
+          </select>
+          <button id="btn-toggle-favorite" class="fav-toggle-btn" title="favorite" disabled><i class="fa-solid fa-star"></i></button>
+        </div>
+
+        <div id="recently-played-row" class="recently-played-row"></div>
+
+        <button id="btn-launch" class="btn-launch-big" disabled><i class="fa-solid fa-play"></i> <span data-i18n="home.launchBtn">اجرای بازی</span></button>
+
+        <div id="status-pill" class="status-pill idle" data-i18n="status.idle">آماده</div>
+
+        <div id="progress-wrap" class="progress-wrap" style="display:none">
+          <div class="xp-bar"><div id="progress-fill" class="xp-bar-fill" style="width:0%"></div></div>
+          <div id="progress-text" class="muted"></div>
+        </div>
+
+        <p id="home-tip" class="home-tip"></p>
+      </div>
+    </div>
+
+    <div id="levelup-toast" class="levelup-toast"></div>
+
+    <div class="drop-overlay" id="drop-overlay">
+      <i class="fa-solid fa-cloud-arrow-down"></i>
+      <span data-i18n="drop.hint">فایل رو رها کن تا نصب بشه (ماد / ریسورس‌پک / شیدر / Modpack)</span>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+      <button class="lightbox-close" id="lightbox-close"><i class="fa-solid fa-xmark"></i></button>
+      <img id="lightbox-img" src="" alt="" />
+    </div>
+
+    <div class="onboarding-overlay" id="onboarding-overlay" style="display:none">
+      <div class="onboarding-card">
+        <div class="onboarding-step active" id="onboard-step-1">
+          <i class="fa-solid fa-earth-americas onboarding-icon"></i>
+          <h2 data-i18n="onboard.langTitle">زبان لانچر رو انتخاب کن</h2>
+          <select id="onboard-lang-select" class="lang-select">
+            <option value="fa">فارسی</option>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+            <option value="ru">Русский</option>
+            <option value="fr">Français</option>
+            <option value="ja">日本語</option>
+            <option value="es">Español</option>
+          </select>
+          <button class="btn-launch onboard-next" data-next="2" data-i18n="onboard.next">بعدی</button>
+        </div>
+        <div class="onboarding-step" id="onboard-step-2">
+          <i class="fa-solid fa-folder-open onboarding-icon"></i>
+          <h2 data-i18n="onboard.dirTitle">پوشه‌ی ماینکرافت رو مشخص کن</h2>
+          <p class="muted" id="onboard-dir-status"></p>
+          <div class="tools-grid">
+            <button id="onboard-btn-detect" class="tool-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="settings.autoDetect">تشخیص خودکار</span></button>
+            <button id="onboard-btn-browse" class="tool-btn"><i class="fa-solid fa-folder-open"></i> <span data-i18n="common.browse">انتخاب پوشه</span></button>
+          </div>
+          <button class="btn-launch onboard-next" data-next="3" data-i18n="onboard.next">بعدی</button>
+        </div>
+        <div class="onboarding-step" id="onboard-step-3">
+          <i class="fa-solid fa-user onboarding-icon"></i>
+          <h2 data-i18n="onboard.accountTitle">اسم اکانت آفلاینت چیه؟</h2>
+          <input id="onboard-username" type="text" class="search-input" placeholder="Player" />
+          <button class="btn-launch onboard-next" id="onboard-finish" data-i18n="onboard.finish">شروع کن</button>
+        </div>
+        <div class="onboarding-dots">
+          <span class="dot active" data-step="1"></span>
+          <span class="dot" data-step="2"></span>
+          <span class="dot" data-step="3"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- داک شناور پایین صفحه -->
+    <nav class="dock">
+      <button class="dock-btn" data-panel="settings">
+        <i class="fa-solid fa-gear"></i>
+        <span class="dock-badge" id="dock-badge-settings" style="display:none"></span>
+        <span class="dock-tip" data-i18n="nav.settings">تنظیمات</span>
+      </button>
+      <button class="dock-btn" data-panel="account">
+        <i class="fa-solid fa-user"></i>
+        <span class="dock-tip" data-i18n="nav.accounts">اکانت‌ها</span>
+      </button>
+      <button class="dock-btn" data-panel="tools">
+        <i class="fa-solid fa-toolbox"></i>
+        <span class="dock-badge" id="dock-badge-tools" style="display:none"></span>
+        <span class="dock-tip" data-i18n="nav.tools">ابزارها</span>
+      </button>
+      <button class="dock-btn" data-panel="status">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="dock-tip" data-i18n="nav.status">وضعیت</span>
+      </button>
+      <button class="dock-btn" data-panel="achievements">
+        <i class="fa-solid fa-trophy"></i>
+        <span class="dock-tip" data-i18n="nav.achievements">دستاوردها</span>
+      </button>
+      <button class="dock-btn" data-panel="leaderboard">
+        <i class="fa-solid fa-ranking-star"></i>
+        <span class="dock-tip" data-i18n="nav.leaderboard">لیدربورد</span>
+      </button>
+      <button class="dock-btn" data-panel="log">
+        <i class="fa-solid fa-terminal"></i>
+        <span class="dock-tip" data-i18n="nav.log">لاگ</span>
+      </button>
+    </nav>
+
+    <!-- پنل‌های overlay -->
+    <div class="panel-overlay" id="panel-overlay">
+      <div class="panel-backdrop" id="panel-backdrop"></div>
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <span id="panel-title">-</span>
+          <button id="panel-close" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="panel-card-body">
+
+          <!-- تنظیمات -->
+          <section class="psection" id="psection-settings">
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="settings.language">زبان لانچر</span></div>
+              <select id="select-lang" class="lang-select">
+                <option value="fa">فارسی</option>
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+                <option value="ru">Русский</option>
+                <option value="fr">Français</option>
+                <option value="ja">日本語</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="settings.mcPath">مسیر ماینکرافت</span></div>
+              <div class="form-row">
+                <input id="input-mcdir" type="text" placeholder="مثلا: C:\Users\You\AppData\Roaming\.minecraft" />
+                <button id="btn-browse-mcdir" class="btn-ghost"><i class="fa-solid fa-folder-open"></i> <span data-i18n="common.browse">انتخاب پوشه</span></button>
+                <button id="btn-auto-detect-mcdir" class="btn-ghost"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="settings.autoDetect">تشخیص خودکار</span></button>
+              </div>
+              <p class="muted" data-i18n="settings.mcPathHint">همون پوشه‌ی .minecraft که نسخه‌های قبلی‌ات توش دانلود شدن.</p>
+              <div id="auto-detect-status" class="muted small"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="settings.javaPath">مسیر جاوا (اختیاری)</span></div>
+              <div class="form-row">
+                <input id="input-java" type="text" data-i18n-ph="settings.javaAuto" placeholder="خالی بذار تا خودکار پیدا بشه" />
+                <button id="btn-browse-java" class="btn-ghost"><i class="fa-solid fa-file"></i> <span data-i18n="common.browseFile">انتخاب فایل</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="settings.ram">مقدار رم اختصاصی</span></div>
+              <div class="ram-row">
+                <label><span data-i18n="settings.ramMin">حداقل:</span> <span id="ram-min-val">1024</span> MB</label>
+                <input id="input-ram-min" type="range" min="512" max="16384" step="256" />
+              </div>
+              <div class="ram-row">
+                <label><span data-i18n="settings.ramMax">حداکثر:</span> <span id="ram-max-val">2048</span> MB</label>
+                <input id="input-ram-max" type="range" min="512" max="16384" step="256" />
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="settings.trayBehavior">رفتار پس‌زمینه</span></div>
+              <label class="checkbox-row"><input type="checkbox" id="input-close-tray" /> <span data-i18n="settings.closeToTray">با بستن پنجره، لانچر توی تری بمونه</span></label>
+              <label class="checkbox-row"><input type="checkbox" id="input-minimize-launch" /> <span data-i18n="settings.minimizeOnLaunch">موقع اجرای بازی، پنجره‌ی لانچر مخفی بشه</span></label>
+            </div>
+
+            <div class="panel" id="booster-panel">
+              <div class="panel-header"><span data-i18n="booster.title">تقویت‌کننده‌ی بازی</span></div>
+              <p class="muted" data-i18n="booster.desc">تنظیمات گاربج‌کالکتور (G1GC) رو متناسب با RAM اختصاصی‌ت انتخاب می‌کنه، اولویت پردازش بازی رو بالا و اولویت خود لانچر رو پایین می‌آره، پنجره‌ی لانچر رو موقع بازی مخفی می‌کنه، و کش لانچر + لاگ/کرش‌ریپورت‌های قدیمی رو پاک می‌کنه تا تمرکز سیستم بیشتر روی بازی باشه. میزان تاثیر کاملاً به سخت‌افزار و بار سیستم شما بستگی داره — عددی تضمین‌شده نیست.</p>
+              <label class="checkbox-row"><input type="checkbox" id="input-game-booster" /> <span data-i18n="booster.enable">فعال کردن تقویت‌کننده‌ی بازی</span></label>
+              <div id="booster-lock-msg" class="muted small"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="backup.title">بکاپ‌گیری خودکار</span></div>
+              <label class="checkbox-row"><input type="checkbox" id="input-auto-backup" /> <span data-i18n="backup.enable">بکاپ‌گیری خودکار زمان‌بندی‌شده از دنیاها</span></label>
+              <label class="checkbox-row"><input type="checkbox" id="input-backup-before-launch" /> <span data-i18n="backup.beforeLaunch">قبل از هر اجرا، خودکار بکاپ بگیر</span></label>
+              <div class="ram-row">
+                <label><span data-i18n="backup.interval">هر چند ساعت:</span> <span id="backup-interval-val">2</span></label>
+                <input id="input-backup-interval" type="range" min="1" max="24" step="1" />
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="portable.title">حالت پرتابل</span></div>
+              <p class="muted" data-i18n="portable.desc">همه‌ی داده‌های لانچر (تنظیمات، اکانت‌ها، Instance ها) رو کنار فایل اجرایی ذخیره می‌کنه، برای اجرا از روی فلش یا هارد اکسترنال.</p>
+              <div id="portable-status" class="muted"></div>
+              <button id="btn-enable-portable" class="btn-ghost"><i class="fa-solid fa-usb"></i> <span data-i18n="portable.enable">فعال‌سازی حالت پرتابل</span></button>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="update.title">به‌روزرسانی لانچر</span></div>
+              <button id="btn-check-update" class="btn-ghost"><i class="fa-solid fa-rotate"></i> <span data-i18n="update.check">بررسی آپدیت</span></button>
+              <div id="update-status" class="muted"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="advanced.title">آرگومان‌های اختصاصی (پیشرفته)</span></div>
+              <p class="muted small" data-i18n="advanced.desc">فقط اگه می‌دونی داری چیکار می‌کنی. این‌ها مستقیم به جاوا و بازی پاس داده می‌شن.</p>
+              <label class="muted small" data-i18n="advanced.jvmLabel">آرگومان‌های JVM</label>
+              <textarea id="input-custom-jvm" class="advanced-textarea" rows="2" placeholder="-Dfoo=bar -Xss1M"></textarea>
+              <label class="muted small" data-i18n="advanced.gameLabel">آرگومان‌های بازی</label>
+              <textarea id="input-custom-game" class="advanced-textarea" rows="2" placeholder="--fullscreen"></textarea>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="discord.title">Discord Rich Presence</span></div>
+              <p class="muted small" data-i18n="discord.desc">وقتی فعال باشه، دوستات توی دیسکورد می‌بینن داری چه نسخه‌ای بازی می‌کنی.</p>
+              <label class="checkbox-row"><input type="checkbox" id="input-discord-rpc" /> <span data-i18n="discord.enable">نمایش وضعیت روی دیسکورد</span></label>
+              <div id="discord-lock-msg" class="muted small"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="dataBackup.title">پشتیبان‌گیری از خود لانچر</span></div>
+              <p class="muted small" data-i18n="dataBackup.desc">تنظیمات، اکانت‌ها، اسکین‌ها و لیست Instance ها رو توی یه فایل ذخیره کن (نه فایل‌های واقعی بازی).</p>
+              <div class="tools-grid">
+                <button id="btn-export-backup" class="tool-btn"><i class="fa-solid fa-file-export"></i> <span data-i18n="dataBackup.export">خروجی گرفتن</span></button>
+                <button id="btn-import-backup" class="tool-btn"><i class="fa-solid fa-file-import"></i> <span data-i18n="dataBackup.import">وارد کردن</span></button>
+              </div>
+              <div id="data-backup-status" class="muted small"></div>
+            </div>
+
+            <button id="btn-save-settings" class="btn-launch"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="settings.save">ذخیره تنظیمات</span></button>
+            <div id="settings-status" class="muted"></div>
+          </section>
+
+          <!-- اکانت -->
+          <section class="psection" id="psection-account">
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="accounts.offlineTitle">اکانت‌های آفلاین</span></div>
+              <div class="form-row">
+                <input id="input-new-offline" type="text" data-i18n-ph="settings.username" placeholder="نام کاربری" />
+                <button id="btn-add-offline" class="btn-ghost"><i class="fa-solid fa-plus"></i> <span data-i18n="accounts.addOffline">افزودن</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="accounts.listTitle">لیست اکانت‌ها</span></div>
+              <div id="accounts-list" class="accounts-list"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="accounts.skinTitle">اسکین اکانت فعال</span></div>
+              <p class="muted small" data-i18n="accounts.skinMechanismNote">این اسکین با یک ریسورس‌پک محلی روی پلیرهای بدون اسکین اعمال می‌شه (توضیح کامل در README).</p>
+
+              <div class="skin-upload-row">
+                <input id="input-skin-name" type="text" data-i18n-ph="accounts.skinNamePh" placeholder="اسم اسکین" />
+                <div class="model-toggle">
+                  <label><input type="radio" name="skin-model" value="classic" checked /> <span data-i18n="accounts.modelClassic">کلاسیک (استیو)</span></label>
+                  <label><input type="radio" name="skin-model" value="slim" /> <span data-i18n="accounts.modelSlim">اسلیم (الکس)</span></label>
+                </div>
+                <button id="btn-upload-skin" class="btn-ghost"><i class="fa-solid fa-upload"></i> <span data-i18n="accounts.uploadSkin">آپلود اسکین (۶۴×۶۴)</span></button>
+              </div>
+              <div id="skin-upload-status" class="muted"></div>
+
+              <div id="skins-list" class="accounts-list"></div>
+
+              <div class="skin-viewer">
+                <canvas id="skin-canvas" width="160" height="320"></canvas>
+                <p class="muted" id="skin-note"></p>
+              </div>
+            </div>
+          </section>
+
+          <!-- ابزارها -->
+          <section class="psection" id="psection-tools">
+           <div class="tools-layout">
+            <div class="tools-subnav">
+              <button class="sub-btn active" data-sub="download"><i class="fa-solid fa-download"></i> <span data-i18n="tools.subDownload">دانلود نسخه</span></button>
+              <button class="sub-btn" data-sub="instances"><i class="fa-solid fa-cubes"></i> <span data-i18n="tools.subInstances">نمونه‌ها (Instance)</span></button>
+              <button class="sub-btn" data-sub="mods"><i class="fa-solid fa-puzzle-piece"></i> <span data-i18n="tools.subMods">مادها</span></button>
+              <button class="sub-btn" data-sub="content"><i class="fa-solid fa-palette"></i> <span data-i18n="tools.subContent">ریسورس‌پک/شیدر</span></button>
+              <button class="sub-btn" data-sub="worlds"><i class="fa-solid fa-earth-americas"></i> <span data-i18n="tools.subWorlds">دنیاها</span></button>
+              <button class="sub-btn" data-sub="servers"><i class="fa-solid fa-server"></i> <span data-i18n="tools.subServers">سرورها</span></button>
+              <button class="sub-btn" data-sub="gallery"><i class="fa-solid fa-images"></i> <span data-i18n="tools.subGallery">گالری</span></button>
+              <button class="sub-btn" data-sub="news"><i class="fa-solid fa-newspaper"></i> <span data-i18n="tools.subNews">اخبار</span></button>
+              <button class="sub-btn" data-sub="quick"><i class="fa-solid fa-toolbox"></i> <span data-i18n="tools.subQuick">دسترسی سریع</span></button>
+            </div>
+
+            <div class="tools-content">
+            <div class="tools-subpage active" id="tools-sub-download">
+              <div class="filter-row">
+                <input id="dl-search" class="search-input" data-i18n-ph="dl.search" placeholder="جستجوی نسخه..." />
+                <label><input type="checkbox" id="dl-filter-release" checked /> <span data-i18n="dl.release">رسمی</span></label>
+                <label><input type="checkbox" id="dl-filter-snapshot" /> <span data-i18n="dl.snapshot">اسنپ‌شات</span></label>
+                <button id="btn-load-manifest" class="btn-ghost"><i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="dl.load">بارگذاری لیست</span></button>
+              </div>
+              <div id="dl-list" class="versions-list dl-list">
+                <div class="empty-state" data-i18n="dl.hint">برای دیدن نسخه‌های قابل‌دانلود، دکمه‌ی «بارگذاری لیست» رو بزن.</div>
+              </div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-instances">
+              <p class="muted" data-i18n="instances.subtitle">هر نمونه (Instance) پوشه‌ی دنیا/ماد/ریسورس‌پک جدا از بقیه داره.</p>
+              <div class="form-row">
+                <input id="input-instance-name" type="text" data-i18n-ph="instances.namePh" placeholder="اسم نمونه" />
+                <select id="instance-version-select" class="version-select small"></select>
+                <button id="btn-create-instance" class="btn-ghost"><i class="fa-solid fa-plus"></i> <span data-i18n="instances.create">ساخت</span></button>
+              </div>
+              <button id="btn-import-modpack" class="btn-ghost"><i class="fa-solid fa-file-zipper"></i> <span data-i18n="instances.importModpack">وارد کردن Modpack (.mrpack)</span></button>
+              <div id="modpack-import-status" class="muted"></div>
+              <div id="modpack-import-progress" class="progress-wrap" style="display:none">
+                <div class="xp-bar"><div id="modpack-progress-fill" class="xp-bar-fill" style="width:0%"></div></div>
+                <div id="modpack-progress-text" class="muted"></div>
+              </div>
+              <div id="instances-list" class="accounts-list"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-mods">
+              <p class="muted" data-i18n="mods.subtitleNew">هر نسخه‌ی ماینکرافت و هر لودری که بخوای رو انتخاب کن — مستقل از نسخه‌ی انتخاب‌شده در صفحه‌ی اصلی.</p>
+              <div class="filter-row">
+                <input id="mods-target-version" class="search-input" data-i18n-ph="mods.versionPh" placeholder="مثلا 1.16.5" style="max-width:160px" />
+                <select id="mods-target-loader" class="version-select small">
+                  <option value="any" data-i18n="mods.loaderAny">هر لودری</option>
+                  <option value="fabric">Fabric</option>
+                  <option value="forge">Forge</option>
+                  <option value="quilt">Quilt</option>
+                  <option value="neoforge">NeoForge</option>
+                </select>
+                <button id="btn-use-current-version" class="btn-ghost" title="use selected version"><i class="fa-solid fa-arrow-rotate-left"></i> <span data-i18n="mods.useCurrent">از نسخه‌ی فعلی</span></button>
+              </div>
+              <div class="filter-row">
+                <input id="mods-search" class="search-input" data-i18n-ph="mods.searchPh" placeholder="جستجوی ماد..." />
+                <button id="btn-search-mods" class="btn-ghost"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="mods.search">جستجو</span></button>
+              </div>
+              <div id="mods-search-results" class="accounts-list"></div>
+              <div class="panel-header" style="margin-top:14px">
+                <span data-i18n="mods.installed">مادهای نصب‌شده</span>
+                <button id="btn-check-mod-updates" class="btn-ghost"><i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="mods.checkUpdates">بررسی آپدیت</span></button>
+              </div>
+              <div id="mods-installed-list" class="accounts-list"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-content">
+              <p class="muted" data-i18n="content.subtitle">جستجو و نصب ریسورس‌پک یا شیدر از Modrinth.</p>
+              <div class="content-type-toggle">
+                <button class="content-type-btn active" data-content-type="resourcepack"><i class="fa-solid fa-palette"></i> <span data-i18n="content.resourcepacks">ریسورس‌پک‌ها</span></button>
+                <button class="content-type-btn" data-content-type="shader"><i class="fa-solid fa-sun"></i> <span data-i18n="content.shaders">شیدرها</span></button>
+              </div>
+              <div class="filter-row">
+                <input id="content-search" class="search-input" data-i18n-ph="content.searchPh" placeholder="جستجو..." />
+                <button id="btn-search-content" class="btn-ghost"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="mods.search">جستجو</span></button>
+              </div>
+              <div id="content-search-results" class="accounts-list"></div>
+              <div class="panel-header" style="margin-top:14px"><span data-i18n="content.installed">نصب‌شده‌ها</span></div>
+              <div id="content-installed-list" class="accounts-list"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-worlds">
+              <p class="muted" data-i18n="worlds.subtitle">دنیاهای نصب‌شده رو مدیریت کن: تغییر نام، کپی، حذف.</p>
+              <div id="worlds-list" class="accounts-list"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-servers">
+              <p class="muted" data-i18n="servers.subtitle">سرورهایی که پرمیوم نمی‌خوان رو اضافه کن و مستقیم وصل شو.</p>
+              <div class="form-row">
+                <input id="input-server-name" type="text" data-i18n-ph="servers.namePh" placeholder="نام سرور" />
+                <input id="input-server-address" type="text" data-i18n-ph="servers.addressPh" placeholder="آدرس" />
+                <button id="btn-add-server" class="btn-ghost"><i class="fa-solid fa-plus"></i> <span data-i18n="servers.add">افزودن</span></button>
+              </div>
+              <p class="muted small" data-i18n="servers.note">اتصال خودکار فقط روی نسخه‌های ۱.۲۰ به بالا کار می‌کنه.</p>
+              <div id="servers-list" class="accounts-list"></div>
+
+              <div class="panel-header" style="margin-top:16px"><span data-i18n="lan.title">دنیاهای شبکه‌ی محلی (LAN)</span></div>
+              <p class="muted small" data-i18n="lan.subtitle">وقتی یکی توی همین شبکه «Open to LAN» رو بزنه، این‌جا خودکار نشون داده می‌شه.</p>
+              <div id="lan-list" class="accounts-list"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-gallery">
+              <div id="gallery-lock-msg" class="muted"></div>
+              <div id="gallery-grid" class="gallery-grid"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-news">
+              <div id="news-list" class="accounts-list"></div>
+            </div>
+
+            <div class="tools-subpage" id="tools-sub-quick">
+              <div class="panel">
+                <div class="panel-header"><span data-i18n="tools.quickAccess">دسترسی سریع</span></div>
+                <div class="tools-grid">
+                  <button class="tool-btn" data-folder="mods"><i class="fa-solid fa-box"></i> <span data-i18n="tools.mods">پوشه‌ی مادها</span></button>
+                  <button class="tool-btn" data-folder="resourcepacks"><i class="fa-solid fa-palette"></i> <span data-i18n="tools.rp">پوشه‌ی ریسورس‌پک‌ها</span></button>
+                  <button class="tool-btn" data-folder="saves"><i class="fa-solid fa-database"></i> <span data-i18n="tools.saves">پوشه‌ی دنیاها</span></button>
+                  <button class="tool-btn" id="tool-backup" data-lock="backup"><i class="fa-solid fa-box-archive"></i> <span data-i18n="tools.backup">بکاپ‌گیری از دنیاها</span></button>
+                </div>
+                <div id="backup-status" class="muted"></div>
+              </div>
+              <div class="panel">
+                <div class="panel-header"><span data-i18n="tools.theme">تم لانچر</span></div>
+                <div id="theme-lock-msg" class="muted"></div>
+                <div id="theme-picker" class="theme-picker"></div>
+              </div>
+              <div class="panel">
+                <div class="panel-header"><span data-i18n="tools.maintenance">نگهداری</span></div>
+                <div class="tools-grid">
+                  <button class="tool-btn" id="btn-detect-java"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="tools.detectJava">تشخیص نسخه‌ی جاوا</span></button>
+                  <button class="tool-btn" id="btn-clear-natives"><i class="fa-solid fa-broom"></i> <span data-i18n="tools.clearNatives">پاک‌کردن کش نیتیوها</span></button>
+                  <button class="tool-btn" id="btn-auto-java"><i class="fa-solid fa-download"></i> <span data-i18n="tools.autoJava">دانلود خودکار جاوای سازگار</span></button>
+                </div>
+                <div id="maintenance-status" class="muted"></div>
+                <div id="java-install-progress" class="progress-wrap" style="display:none">
+                  <div class="xp-bar"><div id="java-progress-fill" class="xp-bar-fill" style="width:0%"></div></div>
+                  <div id="java-progress-text" class="muted"></div>
+                </div>
+              </div>
+            </div>
+            </div>
+           </div>
+          </section>
+
+          <!-- وضعیت -->
+          <section class="psection" id="psection-status">
+            <div class="panel rank-card">
+              <div class="rank-card-top">
+                <i class="fa-solid fa-compass rank-icon-big" id="rank-icon-big"></i>
+                <div>
+                  <div class="rank-name-big" id="rank-name-big">-</div>
+                  <div class="muted"><span data-i18n="status.level">لول</span> <span id="rank-level-big">1</span></div>
+                </div>
+              </div>
+              <div class="xp-bar-wrap">
+                <div class="xp-bar"><div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div></div>
+                <div id="xp-text" class="muted">۰ / ۱۰۰ XP</div>
+              </div>
+              <div id="playtime-text" class="muted"></div>
+              <div id="next-rank-text" class="muted"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="status.byVersion">پلی‌تایم به تفکیک نسخه</span></div>
+              <div id="playtime-by-version" class="accounts-list"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="share.title">اشتراک‌گذاری کارت رنک</span></div>
+              <img id="share-preview" class="share-preview" style="display:none" />
+              <canvas id="rank-share-canvas" width="720" height="360"></canvas>
+              <div class="tools-grid">
+                <button id="btn-generate-card" class="tool-btn"><i class="fa-solid fa-image"></i> <span data-i18n="share.generate">ساخت کارت</span></button>
+                <button id="btn-save-card" class="tool-btn" disabled><i class="fa-solid fa-download"></i> <span data-i18n="share.save">ذخیره</span></button>
+                <button id="btn-copy-card" class="tool-btn" disabled><i class="fa-solid fa-copy"></i> <span data-i18n="share.copy">کپی</span></button>
+              </div>
+              <div id="share-status" class="muted small"></div>
+            </div>
+          </section>
+
+          <!-- دستاوردها -->
+          <section class="psection" id="psection-achievements">
+            <div class="panel">
+              <div class="panel-header"><span data-i18n="ach.title">دستاوردها</span><span id="ach-progress-text" class="muted small"></span></div>
+              <div class="ach-progress"><div id="ach-progress-fill" class="ach-progress-fill"></div></div>
+              <div id="achievements-grid" class="achievements-grid"></div>
+            </div>
+          </section>
+
+          <!-- لیدربورد -->
+          <section class="psection" id="psection-leaderboard">
+            <div class="lb-toolbar">
+              <div class="lb-tabs">
+                <button class="lb-tab active" data-lb="playtime"><i class="fa-solid fa-clock"></i> <span data-i18n="lb.tabPlaytime">زمان بازی</span></button>
+                <button class="lb-tab" data-lb="achievements"><i class="fa-solid fa-trophy"></i> <span data-i18n="lb.tabAchievements">دستاوردها</span></button>
+                <button class="lb-tab" data-lb="wall"><i class="fa-solid fa-medal"></i> <span data-i18n="lb.tabWall">تابلوی دستاورد</span></button>
+              </div>
+              <button id="lb-refresh" class="icon-btn" title="refresh"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+            <div id="lb-summary" class="muted small lb-summary"></div>
+            <div id="lb-list" class="lb-list"></div>
+            <div id="lb-detail" class="lb-detail" style="display:none"></div>
+          </section>
+
+          <!-- لاگ -->
+          <section class="psection" id="psection-log">
+            <div class="log-toolbar">
+              <button id="btn-copy-log" class="btn-ghost"><i class="fa-solid fa-copy"></i> <span data-i18n="log.copy">کپی لاگ</span></button>
+              <button id="btn-clear-log" class="btn-ghost"><i class="fa-solid fa-trash"></i> <span data-i18n="log.clear">پاک کردن لاگ</span></button>
+            </div>
+            <pre id="log-output" class="console-log big"></pre>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast-stack" id="toast-stack"></div>
+
+  <!-- دیالوگ تمی (جایگزین alert/confirm/prompt مرورگر) -->
+  <div class="ph-dialog-overlay" id="ph-dialog-overlay">
+    <div class="ph-dialog">
+      <div class="ph-dialog-icon" id="ph-dialog-icon"><i class="fa-solid fa-circle-info"></i></div>
+      <div class="ph-dialog-message" id="ph-dialog-message"></div>
+      <input type="text" class="search-input ph-dialog-input" id="ph-dialog-input" style="display:none" />
+      <div class="ph-dialog-actions">
+        <button class="btn-ghost" id="ph-dialog-cancel">لغو</button>
+        <button class="btn-launch" id="ph-dialog-ok">تایید</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/renderer.js"></script>
+</body>
+</html>
